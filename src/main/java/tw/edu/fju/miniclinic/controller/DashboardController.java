@@ -32,6 +32,11 @@ public class DashboardController {
     @GetMapping("/dashboard")
     public String dashboard(HttpSession session, Model model) {
         String loggedInDoctorId = (String) session.getAttribute("loggedInDoctorId");
+        
+        if (loggedInDoctorId == null) {
+            return "redirect:/login";
+        }
+
         Doctor doctor = doctorRepo.findById(loggedInDoctorId).orElse(null);
         
         if (doctor == null) {
@@ -58,6 +63,11 @@ public class DashboardController {
     @PostMapping("/password")
     public String processPasswordChange(@Valid @ModelAttribute("passwordForm") PasswordForm form, BindingResult result, HttpSession session, Model model) {
         String loggedInDoctorId = (String) session.getAttribute("loggedInDoctorId");
+        
+        if (loggedInDoctorId == null) {
+            return "redirect:/login";
+        }
+
         Doctor doctor = doctorRepo.findById(loggedInDoctorId).orElse(null);
         model.addAttribute("loggedInDoctorName", session.getAttribute("loggedInDoctorName"));
 
