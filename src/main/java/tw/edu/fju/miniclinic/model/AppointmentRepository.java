@@ -17,4 +17,5 @@ public interface AppointmentRepository extends JpaRepository<Appointment, Long> 
                    "JOIN doctor d ON a.doctor_id = d.doctor_id " +
                    "GROUP BY department", nativeQuery = true)
     List<Object[]> countByDepartment();
+    Object countByStatus(String string);
 }

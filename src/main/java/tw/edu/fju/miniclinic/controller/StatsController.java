@@ -1,19 +1,17 @@
 package tw.edu.fju.miniclinic.controller;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Controller;
-import org.springframework.ui.Model;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RestController;
 import tw.edu.fju.miniclinic.model.AppointmentRepository;
 import tw.edu.fju.miniclinic.model.DoctorRepository;
 import tw.edu.fju.miniclinic.model.PatientRepository;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
+import java.util.LinkedHashMap;
 import java.util.Map;
 
-@Controller
+@RestController
 public class StatsController {
 
     @Autowired
@@ -25,21 +23,19 @@ public class StatsController {
     @Autowired
     private AppointmentRepository appointmentRepo;
 
-    @GetMapping("/stats")
-    public String getStats(Model model) {
-        model.addAttribute("doctorCount", doctorRepo.count());
-        model.addAttribute("patientCount", patientRepo.count());
-        model.addAttribute("appointmentCount", appointmentRepo.count());
-        
-        List<Object[]> deptStatsRaw = appointmentRepo.countByDepartment();
-        List<Map<String, Object>> deptStats = new ArrayList<>();
-        for (Object[] row : deptStatsRaw) {
-            Map<String, Object> map = new HashMap<>();
-            map.put("department", row[0]);
-            map.put("count", row[1]);
-            deptStats.add(map);
-        }
-        model.addAttribute("deptStats", deptStats);
-        return "stats";
+    @GetMapping("/api/stats")
+    public ResponseEntity<Map<String, Object>> getStats() {
+        Map<String, Object> byStatus = new LinkedHashMap<>();
+        byStatus.put("BOOKED", appointmentRepo.countByStatus("BOOKED"));
+        byStatus.put("COMPLETED", appointmentRepo.countByStatus("COMPLETED"));
+        byStatus.put("CANCELLED", appointmentRepo.countByStatus("CANCELLED"));
+
+        Map<String, Object> result = new LinkedHashMap<>();
+        result.put("totalDoctors", doctorRepo.count());
+        result.put("totalPatients", patientRepo.count());
+        result.put("totalAppointments", appointmentRepo.count());
+        result.put("byStatus", byStatus);
+
+        return ResponseEntity.ok(result);
     }
 }
