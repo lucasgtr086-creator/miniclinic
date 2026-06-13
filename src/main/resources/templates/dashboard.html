@@ -15,7 +15,9 @@
         .status-BOOKED    { color: #F59E0B; font-weight: bold; }
         .status-COMPLETED { color: #10B981; font-weight: bold; }
         .status-CANCELLED { color: #94A3B8; }
-        .cancel-btn { background: #EF4444; color: white; border: none; border-radius: 4px; padding: 4px 8px; cursor: pointer; font-size: 12px; margin-left: 8px;}
+        
+        /* 新增取消按鈕的樣式 */
+        .cancel-btn { background: #EF4444; color: white; padding: 6px 12px; border: none; border-radius: 4px; cursor: pointer; font-size: 13px; }
         .cancel-btn:hover { background: #DC2626; }
     </style>
 </head>
@@ -26,7 +28,6 @@
             <p>歡迎，<span th:text="${doctor.name}"></span>（<span th:text="${doctor.department}"></span>）</p>
         </div>
         <form class="logout-form" th:action="@{/logout}" method="post">
-            <a th:href="@{/password}" style="margin-right: 15px; text-decoration: none; color: #14B8A6; font-weight: bold;">修改密碼</a>
             <button type="submit">登出</button>
         </form>
     </header>
@@ -42,6 +43,8 @@
                 <th>病患</th>
                 <th>病歷號</th>
                 <th>狀態</th>
+                <!-- 新增操作欄位 -->
+                <th>操作</th>
             </tr>
         </thead>
         <tbody>
@@ -50,28 +53,49 @@
                 <td th:text="${appt.patient.name}">測試病患甲</td>
                 <td th:text="${appt.patient.chartNo}">TEST00001</td>
                 <td>
-                    <span th:text="${appt.status}" th:class="${'status-' + appt.status}">BOOKED</span>
-                    <!-- 僅顯示 BOOKED 狀態才有的取消按鈕 -->
-                    <button th:if="${appt.status == 'BOOKED'}" class="cancel-btn" th:data-id="${appt.apptId}" onclick="cancelAppointment(this)">取消</button>
+                    <span th:text="${appt.status}"
+                          th:class="${'status-' + appt.status}">BOOKED</span>
+                </td>
+                <!-- 新增取消按鈕 (只有 BOOKED 才會顯示) -->
+                <td>
+                    <button th:if="${appt.status == 'BOOKED'}"
+                            class="cancel-btn"
+                            th:onclick="|cancelAppointment(${appt.apptId})|">取消</button>
                 </td>
             </tr>
         </tbody>
     </table>
+        
     <p style="text-align: center; margin-top: 20px;">
         <a th:href="@{/}">← 回首頁</a>
     </p>
 
+    <!-- 新增 JavaScript 處理取消掛號的邏輯 -->
     <script>
-        function cancelAppointment(btn) {
-            if (!confirm("確定要取消這筆掛號嗎？")) return;
-            const apptId = btn.getAttribute("data-id");
-            fetch(`/api/appointments/${apptId}/status`, {
+        function cancelAppointment(apptId) {
+            if (!confirm("確定要取消這筆掛號嗎？")) {
+                return; // 如果使用者點擊取消，就中止操作
+            }
+            
+            fetch('/api/appointments/' + apptId + '/status', {
                 method: 'PUT',
-                headers: { 'Content-Type': 'application/json' },
+                headers: {
+                    'Content-Type': 'application/json'
+                },
                 body: JSON.stringify({ status: 'CANCELLED' })
             })
-            .then(response => { if (response.ok) { location.reload(); } else { alert("取消失敗"); }})
-            .catch(error => alert("發生錯誤: " + error));
+            .then(response => {
+                if (response.ok) {
+                    // 成功後重新整理頁面
+                    location.reload();
+                } else {
+                    alert("取消失敗，請稍後再試。");
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert("發生連線錯誤，請稍後再試。");
+            });
         }
     </script>
 </body>
